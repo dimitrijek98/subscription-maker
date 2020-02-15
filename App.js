@@ -31,6 +31,7 @@ import SubscriptionList from './src/components/subscriptions/SubscriptionList';
 import AllExtras from './src/components/extras/AllExtras';
 
 const Stack = createStackNavigator();
+console.disableYellowBox = true;
 
 const App: () => React$Node = () => {
   return (

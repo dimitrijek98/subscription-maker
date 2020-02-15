@@ -178,7 +178,7 @@ class Dashboard extends Component {
               <InfoCard headerText={'Info'}>
                 {this.renderInfo()}
               </InfoCard>
-              <InfoCard headerText={'Info'}>
+              <InfoCard headerText={'Extras'}>
                 {this.renderExtras()}
               </InfoCard>
             </View>

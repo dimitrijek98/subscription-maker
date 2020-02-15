@@ -11,8 +11,8 @@ class LoginScreen extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      email: 'user@user.com',
-      password: 'user',
+      email: '',
+      password: '',
       loading: false,
     };
     this.AuthService = new AuthService();
@@ -21,7 +21,7 @@ class LoginScreen extends Component {
 
   login = () => {
     this.setState({loading: true});
-    this.AuthService.login(this.state.email, this.state.password)
+    this.AuthService.login(this.state.email.toLowerCase(), this.state.password)
       .then(response => {
         this.setState({loading: false});
         this.props.navigation.navigate('Subscriptions', {user: response.data});
@@ -53,6 +53,7 @@ class LoginScreen extends Component {
               <Input
                 containerStyle={style.input}
                 placeholder="password"
+                secureTextEntry={true}
                 onChangeText={(text) => this.setState({password: text})}
               />
               <Button
