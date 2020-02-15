@@ -27,6 +27,8 @@ import {
 import LoginScreen from './src/components/auth/LoginScreen';
 import Dashboard from './src/components/dashboard/Dashboard';
 import {createStackNavigator} from '@react-navigation/stack';
+import SubscriptionList from './src/components/subscriptions/SubscriptionList';
+import AllExtras from './src/components/extras/AllExtras';
 
 const Stack = createStackNavigator();
 
@@ -49,11 +51,10 @@ const App: () => React$Node = () => {
             }}>
             {props => <LoginScreen {...props} />}
           </Stack.Screen>
-
           <Stack.Screen
-            name={'Dashboard'}
+            name={'Subscriptions'}
             options={{
-              title: 'Dashboard',
+              title: 'All Subscriptions',
               headerStyle: {
                 backgroundColor: '#37415C',
               },
@@ -65,7 +66,39 @@ const App: () => React$Node = () => {
               },
             }}
           >
+            {props => <SubscriptionList {...props} />}
+          </Stack.Screen>
+          <Stack.Screen
+            name={'Dashboard'}
+            options={{
+              title: 'Dashboard',
+              headerStyle: {
+                backgroundColor: '#37415C',
+              },
+              headerTintColor: '#fff',
+              headerTitleStyle: {
+                fontWeight: 'bold',
+                textAlign: 'center',
+              },
+            }}
+          >
             {props => <Dashboard {...props} />}
+          </Stack.Screen>
+          <Stack.Screen
+            name={'AllExtras'}
+            options={{
+              title: 'All Extras',
+              headerStyle: {
+                backgroundColor: '#37415C',
+              },
+              headerTintColor: '#fff',
+              headerTitleStyle: {
+                fontWeight: 'bold',
+                textAlign: 'center',
+              },
+            }}
+          >
+            {props => <AllExtras {...props} />}
           </Stack.Screen>
         </Stack.Navigator>
       </NavigationContainer>

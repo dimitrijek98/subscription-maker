@@ -1,39 +1,68 @@
 import React, {Component} from 'react';
-import {View, StyleSheet, StatusBar, Text} from 'react-native';
+import {View, StyleSheet, StatusBar, Text, ActivityIndicator} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {Input, Button} from 'react-native-elements';
 import axios from 'axios';
 import InfoCard from '../dashboard/InfoCard';
+import AuthService from '../../Services/AuthService';
+import SubscriptionService from '../../Services/SubscriptionService';
 
 class LoginScreen extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      email: 'user@user.com',
+      password: 'user',
+      loading: false,
+    };
+    this.AuthService = new AuthService();
+    this.SubscriptionService = new SubscriptionService();
+  }
+
   login = () => {
-    this.props.navigation.navigate('Dashboard');
+    this.setState({loading: true});
+    this.AuthService.login(this.state.email, this.state.password)
+      .then(response => {
+        this.setState({loading: false});
+        this.props.navigation.navigate('Subscriptions', {user: response.data});
+      })
+      .catch(err => {
+        alert('Problem with login');
+        this.setState({loading: false});
+        console.log({...err});
+      });
   };
+
   render() {
     return (
       <View style={style.container}>
         <StatusBar backgroundColor={'#37415C'}/>
         <View style={style.formContainer}>
-         <InfoCard headerText={'Welcome'}>
-           <View style={{width:'100%'}}>
-             <Input
-               containerStyle={style.input}
-               placeholder="email"
-             />
-             <Input
-               containerStyle={style.input}
-               placeholder="password"
-             />
-             <Button
-               title="Login"
-               buttonStyle={style.button}
-               titleStyle={style.buttonTitle}
-               onPress={this.login}
-             />
-           </View>
-         </InfoCard>
-
-
+          {this.state.loading &&
+          <View style={{flex: 1}}>
+            <ActivityIndicator/>
+          </View>
+          }
+          <InfoCard headerText={'Welcome'}>
+            <View style={{width: '100%'}}>
+              <Input
+                containerStyle={style.input}
+                placeholder="email"
+                onChangeText={(text) => this.setState({email: text})}
+              />
+              <Input
+                containerStyle={style.input}
+                placeholder="password"
+                onChangeText={(text) => this.setState({password: text})}
+              />
+              <Button
+                title="Login"
+                buttonStyle={style.button}
+                titleStyle={style.buttonTitle}
+                onPress={this.login}
+              />
+            </View>
+          </InfoCard>
         </View>
       </View>
     );

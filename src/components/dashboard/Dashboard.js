@@ -7,54 +7,51 @@ import {
   ImageBackground,
   TouchableOpacity,
   ScrollView,
-  StatusBar,
+  StatusBar, ActivityIndicator,
 } from 'react-native';
 import InfoCard from './InfoCard';
 import {Button} from 'react-native-elements';
+import SubscriptionService from '../../Services/SubscriptionService';
 
 const {width, height} = Dimensions.get('window');
 
 class Dashboard extends Component {
   constructor(props) {
     super(props);
+    this.SubscriptionService = new SubscriptionService();
     this.state = {
       subscription: null,
       selected: 0,
       selectedExtra: -1,
+      loading: true,
     };
   }
 
   componentDidMount = () => {
-    let subscription = {
-      user: {
-        email: 'user@user.com',
-      },
-      target: 'phone or address',
-      plan: {
-        name: 'Plan name',
-        price: 3500,
-        services: [
-          {
-            type: 'internet',
-            speed: '100/10',
-            amount: 'unlimited',
-            IPAddress: 'Static',
-            extras: ['Static IP'],
-          },
-          {
-            type: 'phone',
-            minutes: 500,
-            extras: ['Roaming 100'],
-          },
-          {
-            type: 'cable',
-            channels: 160,
-            extras: ['HBO'],
-          },
-        ],
-      },
-    };
-    this.setState({subscription});
+    const {target, user} = this.props.route.params;
+    const focusEvent = this.props.navigation.addListener('focus', () => {
+      this.fetchContract(user.email, target);
+    });
+    this.setState({user});
+    this.SubscriptionService.getConcreteContract(user.email, target)
+      .then(response => {
+        this.setState({subscription: response.data, loading: false});
+      })
+      .catch(err => {
+        console.log({...err});
+      });
+  };
+
+  fetchContract = (email, target) => {
+    console.log('fetching');
+    this.setState({loading: true});
+    this.SubscriptionService.getConcreteContract(email, target)
+      .then(response => {
+        this.setState({subscription: response.data, loading: false});
+      })
+      .catch(err => {
+        console.log({...err});
+      });
   };
 
   renderInfo = () => {
@@ -70,12 +67,40 @@ class Dashboard extends Component {
   };
 
   selectExtra = (index) => {
-    if(this.state.selectedExtra === index){
+    if (this.state.selectedExtra === index) {
       this.setState({selectedExtra: -1});
     } else {
       this.setState({selectedExtra: index});
     }
+  };
 
+  addExtra = () => {
+    this.props.navigation.navigate('AllExtras', {
+      myExtras: [
+        ...this.state.subscription.plan.services[this.state.selected].extras,
+      ],
+      type: this.state.subscription.plan.services[this.state.selected].type,
+      subscription: this.state.subscription,
+      user: this.state.user,
+    });
+  };
+
+  removeExtra = (extra) => {
+    let data = {
+      email: this.state.subscription.user.email,
+      target: this.state.subscription.target,
+      type: this.state.subscription.plan.services[this.state.selected].type,
+      name: extra,
+    };
+    console.log(data);
+    this.SubscriptionService.deleteExtras(data)
+      .then(res => {
+        console.log('delete',res);
+        this.fetchContract(this.state.subscription.user.email, this.state.subscription.target);
+      })
+      .catch(err => {
+        console.log({...err});
+      });
   };
 
   renderExtras = () => {
@@ -90,13 +115,14 @@ class Dashboard extends Component {
                 title="Cancel"
                 buttonStyle={style.cancelButton}
                 titleStyle={{color: 'white'}}
+                onPress={() => this.removeExtra(ext)}
               />
               }
             </TouchableOpacity>
           );
         })
       }
-      <TouchableOpacity style={style.addExtraItem}>
+      <TouchableOpacity onPress={() => this.addExtra()} style={style.addExtraItem}>
         <Text style={style.accentText}>+</Text>
       </TouchableOpacity>
     </>;
@@ -105,46 +131,61 @@ class Dashboard extends Component {
 
   changeSelected = (selected) => {
     this.setState({selected});
-  }
+  };
 
   render() {
     return (
-      this.state.subscription &&
-      <ScrollView>
-        <StatusBar backgroundColor={'#37415C'} />
+      <>
+        {this.state.loading &&
         <View style={style.container}>
-          <View style={style.coverContainer}>
-            <ImageBackground source={require('../../assets/cover.jpg')} style={style.coverImage}>
-              <Text style={style.coverText}>{this.state.subscription.plan.name}</Text>
-            </ImageBackground>
-            <View style={style.targetContainer}>
-              <Text style={style.label}>Target: </Text>
-              <Text style={style.accentText}>{this.state.subscription.target}</Text>
-            </View>
-          </View>
-          <View style={style.detailContainer}>
-            <View style={style.tabContainer}>
-              {
-                this.state.subscription.plan.services.map((extra ,index) => {
-                  return <TouchableOpacity key={index} onPress={() => this.changeSelected(index)} style={index === this.state.selected ?
-                    {...style.activeTab, width: (width - 100) / this.state.subscription.plan.services.length} :
-                    {...style.inactiveTab, width: (width - 100) / this.state.subscription.plan.services.length}}>
-                    <Text style={index === this.state.selected ? style.activeText : style.inactiveText}>{extra.type}</Text>
-                  </TouchableOpacity>
-                })
-              }
-
-            </View>
-            <InfoCard headerText={'Info'}>
-              {this.renderInfo()}
-            </InfoCard>
-            <InfoCard headerText={'Info'}>
-              {this.renderExtras()}
-            </InfoCard>
-          </View>
-
+          <ActivityIndicator/>
         </View>
-      </ScrollView>
+        }
+        {!this.state.loading &&
+        <ScrollView>
+          <StatusBar backgroundColor={'#37415C'}/>
+          <View style={style.container}>
+            <View style={style.coverContainer}>
+              <ImageBackground source={require('../../assets/cover.jpg')} style={style.coverImage}>
+                <Text style={style.coverText}>{this.state.subscription.plan.name}</Text>
+              </ImageBackground>
+              <View style={style.targetContainer}>
+                <Text style={style.label}>Target: </Text>
+                <Text style={style.accentText}>{this.state.subscription.target}</Text>
+              </View>
+            </View>
+            <View style={style.detailContainer}>
+              <View style={style.tabContainer}>
+                {
+                  this.state.subscription.plan.services.map((extra, index) => {
+                    return <TouchableOpacity key={index} onPress={() => this.changeSelected(index)}
+                                             style={index === this.state.selected ?
+                                               {
+                                                 ...style.activeTab,
+                                                 width: (width - 100) / this.state.subscription.plan.services.length,
+                                               } :
+                                               {
+                                                 ...style.inactiveTab,
+                                                 width: (width - 100) / this.state.subscription.plan.services.length,
+                                               }}>
+                      <Text
+                        style={index === this.state.selected ? style.activeText : style.inactiveText}>{extra.type}</Text>
+                    </TouchableOpacity>;
+                  })
+                }
+
+              </View>
+              <InfoCard headerText={'Info'}>
+                {this.renderInfo()}
+              </InfoCard>
+              <InfoCard headerText={'Info'}>
+                {this.renderExtras()}
+              </InfoCard>
+            </View>
+
+          </View>
+        </ScrollView>}
+      </>
 
     );
   }

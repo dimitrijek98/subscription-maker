@@ -1,19 +1,31 @@
-import axios from "axios";
-import {baseURL} from './Config'
+import axios from 'axios';
+import {baseURL} from './Config';
+import {AsyncStorage} from 'react-native';
 
 export default class AuthService {
+  login(email, password) {
+    return axios.post(`${baseURL}LogIn`, {password, email});
+  }
 
-    login(email, password) {
-        return axios.post(`${baseURL}LogIn`, {password, email});
-    }
+  getUserContracts(email) {
+    return axios.post(`${baseURL}UserContracts`, {email});
+  }
 
-    setUser(user) {
-        const jsonUser = JSON.stringify(user);
-        localStorage.setItem('user', jsonUser);
-    }
+  getAllExtras(type) {
+    return axios.get(`${baseURL}AllExtras`, {params: {type}});
+  }
 
-    getUser() {
-        const jsonUser = localStorage.getItem('user');
-        return JSON.parse(jsonUser);
-    }
+  addExtra(type, name, email, target) {
+    return axios.post(`${baseURL}AddExtras`);
+  }
+
+  setUser(user) {
+    const jsonUser = JSON.stringify(user);
+    return AsyncStorage.setItem('user', jsonUser);
+  }
+
+  async getUser() {
+    const jsonUser = await AsyncStorage.getItem('user');
+    return JSON.parse(jsonUser);
+  }
 }
